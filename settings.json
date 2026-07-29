@@ -1,0 +1,29 @@
+{
+    "Command": "!leef",
+    "WaterMin": 1,
+    "WaterMax": 5,
+    "WaterPerLevelBase": 100,
+    "WaterScale": 1.25,
+    "LevelNames": [
+        "Samen",
+        "Setzling",
+        "Jungpflanze",
+        "Blühende Pflanze",
+        "Reife Pflanze",
+        "Großer Baum",
+        "LAZ Baum"
+    ],
+    "TaskList": [
+        "Du musst 2 Minuten lang Englisch sprechen",
+        "Trinke einen Schluck Wasser",
+        "Lass den Chat eine Taste wählen, die du 60 Sekunden nicht benutzen darfst",
+        "Klatsche nach jedem Kill oder Tod einmal in die Hände",
+        "Dreh deine Kopfhörer verkehrt herum bis zum nächsten Match",
+        "Lobe den Enemy Spieler, der dich als letztes getötet hat, bis zum Ende des Spiels",
+        "Dehnen! Dehne dich, egal in welcher Situation du dich gerade befindest",
+        "Wechsle nach dem nächsten Tod den Helden und spiele ihn bis zum Ende des Spiels",
+        "Sage nach jedem Tod 'Das war geplant'",
+        "Sportlich bleiben! Mache 10 Liegestütze"
+    ],
+    "EnableStreamMessage": true
+}
