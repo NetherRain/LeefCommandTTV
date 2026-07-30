@@ -2,20 +2,23 @@
 
 Leef is a simple Twitch chat minigame for Stream.bot. Viewers can water a shared plant with `!leef` and help it grow through multiple levels. When the plant levels up, a random streamer task is assigned for extra interaction.
 
+Version: `1.2.0`
+
 ## Features
 
 - `!leef` waters the plant with a random amount of water (1–5)
 - `!leef status` shows the current plant level, water progress, and next level target
-- Level progression requires more water at each stage
+- Level progression becomes more demanding at each stage
 - Random streamer tasks are triggered at every level-up
-- Built-in command-line test mode for development without Stream.bot
+- Built-in command-line test mode for local development without Stream.bot
+- Overlay state support for simple visual progress displays
 
 ## Commands
 
 - `!leef` - water the plant and show progress
 - `!leef status` - display the current plant status
 - `!leef help` - show help text
-- `!leef reset` - moderator-only command to reset the plant
+- `!leef reset` - reset the plant to its initial state
 
 ## Setup
 
@@ -47,9 +50,14 @@ You can modify the following settings directly in `leef.py`:
 - `LevelNames` - define custom names for each level
 - `TaskList` - add or change randomized streamer tasks
 
+## Files
+
+- `data.json` stores the plant progress between runs
+- `settings.json` contains the configurable gameplay settings
+- `overlay_state.json` is written by the script for simple overlay integration
+
 ## Notes
 
-- `data.json` stores the plant progress between runs.
 - The built-in test harness is only active when running `leef.py` directly.
 - When used in Stream.bot, the test harness does not affect normal bot behavior.
 

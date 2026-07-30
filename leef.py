@@ -3,17 +3,17 @@ import json
 import os
 import random
 
-# Leef: a simple plant watering game for Stream.bot
-# Users can water the plant with !leef, view the current status with !leef status,
-# and trigger a random streamer task when the plant levels up.
-# This version also supports a local command-line test harness for development.
+# Leef: a simple plant watering game for Stream.bot.
+# Players can water a shared plant with !leef, inspect its current status with !leef status,
+# and trigger a random streamer task when the plant advances to a new level.
+# The script also includes a local command-line test harness for development and debugging.
 
 # Stream.bot metadata
 ScriptName = "Leef"
 Website = "https://github.com/NetherRain/LeefCommandTTV"
 Description = "A fun plant watering minigame for Stream.bot with growable plant levels, randomized streamer tasks, and a built-in command-line test mode."
 Creator = "NetherRain"
-Version = "1.1.0"
+Version = "1.2.0"
 
 SettingsFile = "settings.json"
 DataFile = "data.json"
@@ -31,17 +31,19 @@ SparkleEmoji = "✨"
 StarEmoji = "🌟"
 
 LevelIcons = [
-    SeedEmoji,
-    SeedEmoji,
-    PlantEmoji,
-    FlowerEmoji,
-    TreeEmoji,
-    TreeEmoji,
-    StarEmoji,
+    "🌱",
+    "🌱",
+    "🌿",
+    "🌸",
+    "🌳",
+    "🌳",
+    "🌟",
 ]
 
 
 class BotBridge:
+    """Small compatibility wrapper for different Stream.bot parent objects."""
+
     def __init__(self, parent=None):
         self.parent = parent
 
@@ -80,6 +82,8 @@ class BotBridge:
 
 
 class GenericChatData:
+    """Normalizes chat payloads from different sources into a simple interface."""
+
     def __init__(self, source):
         self.source = source
         self.UserName = self._extract_user_name(source)
@@ -128,6 +132,7 @@ class GenericChatData:
 
 
 def NormalizeChatData(data):
+    # Accept chat data from Stream.bot or a local test harness and adapt it to a common format.
     if data is None:
         return None
     if hasattr(data, "IsChatMessage") and callable(data.IsChatMessage):
@@ -148,7 +153,7 @@ def ResolveParent(parent=None):
 
 
 def SendBotMessage(message, parent=None):
-    ResolveParent(parent).send_message(message)
+    print(message)
 
 
 class Settings(object):
@@ -261,35 +266,67 @@ def Init(parent=None):
 
 
 def Execute(data, parent=None):
-    bridge = ResolveParent(parent)
-    data = NormalizeChatData(data)
-    if data is None:
-        return
+    # Parse the incoming chat command and route it to the matching gameplay action.
+    print("EXEC START", flush=True)
 
-    # Only react to chat commands and correct command trigger
+    data = NormalizeChatData(data)
+
+    if data is None:
+        print("DATA NONE", flush=True)
+        return ""
+
     first_param = data.GetParam(0)
-    if not data.IsChatMessage() or first_param is None or first_param.lower() != settings.Command.lower():
-        return
+
+    if first_param is None:
+        return ""
+
+    if first_param.lower() != settings.Command.lower():
+        return ""
 
     user = data.UserName or ""
-    second_param = data.GetParam(1)
-    param = second_param.lower() if second_param is not None else ""
 
+    second_param = data.GetParam(1)
+    param = second_param.lower() if second_param else ""
+
+    print("COMMAND OK", flush=True)
+    print("USER=" + user, flush=True)
+    print("PARAM=" + param, flush=True)
+
+
+    # STATUS
     if param == "status":
         response = GetStatusMessage()
-        bridge.send_message(response)
-        return
+        print("RESPONSE:" + response, flush=True)
+        return response
 
-    if param == "reset" and (bridge.is_moderator(data.UserName) or bridge.has_permission(data.UserName, "Moderator")):
-        ResetPlant(user, parent=bridge)
-        return
 
+    # HELP
     if param == "help":
-        bridge.send_message("!leef gießt die Pflanze zufällig mit 1-5 Wasser. !leef status zeigt den aktuellen Stand.")
-        return
+        response = (
+            "🌱 Leef Commands: "
+            "!leef = Pflanze gießen | "
+            "!leef status = Status "
+        )
+        print("RESPONSE:" + response, flush=True)
+        return response
 
+
+    # RESET
+    if param == "reset":
+        ResetPlant(user)
+        response = "🌱 " + user + " hat die Pflanze zurückgesetzt!"
+        print("RESPONSE:" + response, flush=True)
+        return response
+
+
+    # NORMALES GIESSEN
     amount = random.randint(settings.WaterMin, settings.WaterMax)
-    WaterPlant(user, amount, parent=bridge)
+
+    response = WaterPlant(user, amount)
+
+    print("RESPONSE:" + response, flush=True)
+
+    return response
 
 
 def Tick():
@@ -474,64 +511,99 @@ def GetRequiredWaterForNextLevel(level):
 
 
 def WaterPlant(user, amount, parent=None):
-    # Add water and determine whether the plant leveled up
-    bridge = ResolveParent(parent)
+    # Apply the watering action, update the progress state, and build the response message.
+    print("WP START", flush=True)
+
     maxLevel = len(settings.LevelNames) - 1
     oldLevel = plantData["level"]
+
+    print("WP OLD LEVEL=" + str(oldLevel), flush=True)
+
     plantData["last_user"] = user
     plantData["last_action"] = "watering"
     plantData["last_amount"] = amount
     plantData["total_water"] += amount
+
+    print("WP WATER UPDATED", flush=True)
+
     newLevel = GetLevelFromTotalWater(plantData["total_water"])
 
+    print("WP NEW LEVEL=" + str(newLevel), flush=True)
+    taskMessage = ""
+
     if newLevel > oldLevel:
+        print("WP LEVEL UP", flush=True)
+
         plantData["level"] = newLevel
         plantData["last_action"] = "levelup"
+
         task = random.choice(settings.TaskList)
         plantData["last_task"] = task
+        taskMessage = " 🎯 Aufgabe: " + task
+
+        print("WP BEFORE SAVE", flush=True)
         SaveData()
-        currentWater = GetWaterInCurrentLevel(plantData["total_water"], newLevel)
+        print("WP AFTER SAVE", flush=True)
+
+        currentWater = GetWaterInCurrentLevel(
+            plantData["total_water"],
+            newLevel
+        )
+
         needed = GetWaterNeededForLevel(newLevel)
         progressBar = GetProgressBar(currentWater, needed)
         levelIcon = GetLevelIcon(newLevel)
-        message = (
-            "{sparkle} {user} gießt die Pflanze mit {amount} Wasser! {water} "
-            "Level-Up: {oldLevel} → {newLevel} {levelIcon} '{levelName}' {sparkle} "
-            "| {bar} | Aufgabe: {task}"
-        ).format(
-            user=user,
-            amount=amount,
-            oldLevel=oldLevel,
-            newLevel=newLevel,
-            levelIcon=levelIcon,
-            levelName=GetLevelName(newLevel),
-            task=task,
-            water=WaterEmoji,
-            sparkle=SparkleEmoji,
-            bar=progressBar,
-        )
+
+        print("WP BEFORE MESSAGE", flush=True)
+
     else:
+        print("WP NORMAL WATER", flush=True)
+        plantData["last_task"] = ""
+
+        print("WP BEFORE SAVE", flush=True)
         SaveData()
-        currentWater = GetWaterInCurrentLevel(plantData["total_water"], oldLevel)
-        needed = GetWaterNeededForLevel(oldLevel)
-        progressBar = GetProgressBar(currentWater, needed)
-        levelIcon = GetLevelIcon(oldLevel)
-        message = (
-            "{plant} {user} gießt die Pflanze mit {amount} Wasser. {water} "
-            "Level {level} '{levelName}' | {current}/{needed} | {bar}"
-        ).format(
-            plant=levelIcon,
-            user=user,
-            amount=amount,
-            water=WaterEmoji,
-            level=oldLevel,
-            levelName=GetLevelName(oldLevel),
-            current=currentWater,
-            needed=needed,
-            bar=progressBar,
+        print("WP AFTER SAVE", flush=True)
+
+        currentWater = GetWaterInCurrentLevel(
+            plantData["total_water"],
+            oldLevel
         )
 
-    bridge.send_message(message)
+        print("WP CURRENT WATER OK", flush=True)
+
+        needed = GetWaterNeededForLevel(oldLevel)
+
+        print("WP NEEDED OK", flush=True)
+
+        progressBar = GetProgressBar(currentWater, needed)
+
+        print("WP BAR OK", flush=True)
+
+        levelIcon = GetLevelIcon(oldLevel)
+
+        print("WP ICON OK", flush=True)
+
+    print("WP BUILD MESSAGE", flush=True)
+
+    message = (
+        "{plant} {user} gießt die Pflanze mit {amount} Wasser. {water} "
+        "Level {level} '{levelName}' | {current}/{needed} | {bar}{task}"
+    ).format(
+        plant=levelIcon,
+        user=user,
+        amount=amount,
+        water=WaterEmoji,
+        level=plantData["level"],
+        levelName=GetLevelName(plantData["level"]),
+        current=currentWater,
+        needed=needed,
+        bar=progressBar,
+        task=taskMessage
+    )
+
+    print("WP MESSAGE DONE", flush=True)
+
+    return message
 
 
 def ResetPlant(user, parent=None):
@@ -544,10 +616,12 @@ def ResetPlant(user, parent=None):
     plantData["last_action"] = "reset"
     plantData["last_amount"] = 0
     SaveData()
-    bridge.send_message("{} hat die Pflanze zurückgesetzt. Sie beginnt wieder bei Level 0 (Samen).".format(user))
+    print("{} hat die Pflanze zurückgesetzt. Sie beginnt wieder bei Level 0 (Samen).".format(user))
 
 
 class CLITestHarness:
+    """Simple local console harness for testing the script without Stream.bot."""
+
     class DummyParent:
         def send_message(self, message):
             print("[BOT]", message)
