@@ -1,6 +1,6 @@
-# Leef - Streamlabs Chatbot Plant Game
+# Leef - Stream.bot Plant Game
 
-Leef is a simple Twitch chat minigame for Streamlabs Chatbot. Viewers can water a shared plant with `!leef` and help it grow through multiple levels. When the plant levels up, a random streamer task is assigned for extra interaction.
+Leef is a simple Twitch chat minigame for Stream.bot. Viewers can water a shared plant with `!leef` and help it grow through multiple levels. When the plant levels up, a random streamer task is assigned for extra interaction.
 
 ## Features
 
@@ -8,7 +8,7 @@ Leef is a simple Twitch chat minigame for Streamlabs Chatbot. Viewers can water 
 - `!leef status` shows the current plant level, water progress, and next level target
 - Level progression requires more water at each stage
 - Random streamer tasks are triggered at every level-up
-- Built-in command-line test mode for development without Streamlabs
+- Built-in command-line test mode for development without Stream.bot
 
 ## Commands
 
@@ -19,13 +19,13 @@ Leef is a simple Twitch chat minigame for Streamlabs Chatbot. Viewers can water 
 
 ## Setup
 
-1. Place `leef.py` in your Streamlabs Chatbot `Scripts` folder.
-2. Start Streamlabs Chatbot and enable the script.
+1. Place `leef.py` in your Stream.bot script folder or load it through your Stream.bot setup.
+2. Start Stream.bot and enable the script.
 3. Use chat commands in your Twitch channel to test the game.
 
 ## Command-Line Test Mode
 
-If you do not have a Streamlabs account yet, you can still test the script locally.
+If you do not want to run the bot in Stream.bot yet, you can still test the script locally.
 
 1. Open a terminal or command prompt.
 2. Run:
@@ -51,7 +51,7 @@ You can modify the following settings directly in `leef.py`:
 
 - `data.json` stores the plant progress between runs.
 - The built-in test harness is only active when running `leef.py` directly.
-- When used in Streamlabs, the test harness does not affect normal bot behavior.
+- When used in Stream.bot, the test harness does not affect normal bot behavior.
 
 ## Credits
 
