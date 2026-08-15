@@ -2,7 +2,7 @@
 
 Leef is a Twitch chat minigame for Stream.bot. Viewers water a shared plant with `!leef`, watch the plant grow through levels, and trigger a streamer task at every level-up.
 
-Version: `1.2.0`
+Version: `1.2.1`
 
 ## Example Screenshots
 
