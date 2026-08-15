@@ -288,6 +288,14 @@ def Execute(data, parent=None):
     second_param = data.GetParam(1)
     param = second_param.lower() if second_param else ""
 
+    # If there's an extra parameter after the command, only allow
+    # specific subcommands. Any other extra parameter should not
+    # trigger watering (e.g. "!leef 1" should do nothing).
+    if second_param is not None and isinstance(second_param, str) and second_param.strip() != "":
+        if param not in ("status", "help", "reset"):
+            print("IGNORED: extra param not allowed", flush=True)
+            return ""
+
     print("COMMAND OK", flush=True)
     print("USER=" + user, flush=True)
     print("PARAM=" + param, flush=True)
