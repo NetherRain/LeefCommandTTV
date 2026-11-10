@@ -1,5 +1,8 @@
 {
     "total_water": 0,
     "level": 0,
-    "last_task": ""
+    "last_task": "",
+    "last_user": "Tester",
+    "last_action": "reset",
+    "last_amount": 0
 }

@@ -31,6 +31,12 @@ def main():
 
     user = sys.argv[1] if len(sys.argv) > 1 else "ChatUser"
     message = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "!leef"
+    # Optional third argument: is_mod (true/1/yes => moderator)
+    is_mod = False
+    if len(sys.argv) > 3:
+        val = sys.argv[3].lower()
+        if val in ("1", "true", "yes", "y", "t"):
+            is_mod = True
 
     print("USER=" + user, flush=True)
     print("MESSAGE=" + message, flush=True)
@@ -39,6 +45,9 @@ def main():
         "user_name": user,
         "message": message
     }
+    # include moderator flag if provided
+    if is_mod:
+        data["is_mod"] = True
 
     print("BEFORE EXECUTE", flush=True)
 

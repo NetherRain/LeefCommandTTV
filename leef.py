@@ -174,16 +174,15 @@ class Settings(object):
             "LAZ Baum"
         ]
         self.TaskList = [
-            "Du musst 2 Minuten lang Englisch sprechen",
-            "Trinke einen Schluck Wasser",
-            "Lass den Chat eine Taste wählen, die du 60 Sekunden nicht benutzen darfst",
-            "Klatsche nach jedem Kill oder Tod einmal in die Hände",
-            "Dreh deine Kopfhörer verkehrt herum bis zum nächsten Match",
-            "Lobe den Enemy Spieler, der dich als letztes getötet hat, bis zum Ende des Spiels",
-            "Dehnen! Dehne dich, egal in welcher Situation du dich gerade befindest",
-            "Wechsle nach dem nächsten Tod den Helden und spiele ihn bis zum Ende des Spiels",
-            "Sage nach jedem Tod 'Das war geplant'" ,
-            "Sportlich bleiben! Mache 10 Liegestütze"
+            "Kommentiere die nächste Runde 60 Sekunden lang wie ein E-Sport-Caster",
+            "Gib deiner Leef-Pflanze einen Namen und lass den Chat darüber abstimmen",
+            "Erkläre dem Chat deinen nächsten Spielzug, als würdest du ein Tutorial aufnehmen",
+            "Verpasse deinem nächsten Sieg- oder Niederlagenbildschirm eine dramatische Filmmusik",
+            "Lobe nach der nächsten Runde einen Gegner für einen guten Spielzug",
+            "Lass den Chat entscheiden welchen Helden du für die ganze Runde spielen musst",
+            "Sprich eine Minute lang wie ein Naturdokumentar über das Spielgeschehen",
+            "Feiere den nächsten kleinen Erfolg, als hättest du gerade ein Finale gewonnen",
+            'Bei jedem Tod, sag im Voicechat "I love Leef", "Leef is Life", "Leef is love" o.Ä.',
         ]
         self.EnableStreamMessage = True
         self.Defaults = {
@@ -269,6 +268,12 @@ def Execute(data, parent=None):
     # Parse the incoming chat command and route it to the matching gameplay action.
     print("EXEC START", flush=True)
 
+    # Accept a moderator flag from external callers (e.g., Streamer.bot C# wrapper)
+    # If callers pass a dict with "is_mod": True, honor it here.
+    is_mod_flag = False
+    if isinstance(data, dict):
+        is_mod_flag = bool(data.get("is_mod", False))
+
     data = NormalizeChatData(data)
 
     if data is None:
@@ -321,6 +326,22 @@ def Execute(data, parent=None):
 
     # RESET
     if param == "reset":
+        # Only allow moderators to reset. If a parent bridge is available,
+        # prefer the bridge permission check; otherwise rely on the external
+        # provided `is_mod` flag.
+        bridge = ResolveParent(parent)
+        allowed = False
+        try:
+            if bridge is not None and bridge.is_moderator(user):
+                allowed = True
+        except Exception:
+            allowed = allowed
+
+        if not allowed and not is_mod_flag:
+            response = "🚫 Nur Moderatoren dürfen die Pflanze zurücksetzen."
+            print("RESPONSE:" + response, flush=True)
+            return response
+
         ResetPlant(user)
         response = "🌱 " + user + " hat die Pflanze zurückgesetzt!"
         print("RESPONSE:" + response, flush=True)
@@ -548,6 +569,21 @@ def WaterPlant(user, amount, parent=None):
         task = random.choice(settings.TaskList)
         plantData["last_task"] = task
         taskMessage = " 🎯 Aufgabe: " + task
+
+        if newLevel >= maxLevel:
+            plantData["total_water"] = 0
+            plantData["level"] = 0
+            plantData["last_action"] = "reset"
+            plantData["last_amount"] = 0
+            SaveData()
+            return (
+                "{icon} {user} hat alle Stufen erreicht! Leef startet wieder bei "
+                "Level 0 'Samen'. 🎯 Letzte Aufgabe: {task}"
+            ).format(
+                icon=GetLevelIcon(maxLevel),
+                user=user,
+                task=task,
+            )
 
         print("WP BEFORE SAVE", flush=True)
         SaveData()

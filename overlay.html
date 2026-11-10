@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leef Overlay</title>
+  <style>
+    :root {
+      --bg: rgba(9, 18, 34, 0.92);
+      --panel: rgba(20, 34, 58, 0.95);
+      --accent: #56f0c8;
+      --accent-2: #ffd166;
+      --text: #f8fbff;
+      --muted: #9fb3c8;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .card {
+      width: 420px;
+      padding: 18px 20px 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--panel), rgba(13, 27, 51, 0.95));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .icon {
+      font-size: 28px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+    }
+
+    .level-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0 10px;
+    }
+
+    .level-badge {
+      background: rgba(86, 240, 200, 0.16);
+      color: var(--accent);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid rgba(86,240,200,0.25);
+    }
+
+    .progress-wrap {
+      margin-top: 8px;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: inherit;
+      transition: width 0.35s ease;
+    }
+
+    .status-box {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .muted { color: var(--muted); }
+    .accent { color: var(--accent); }
+    .highlight { color: var(--accent-2); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <div class="title">Leef 🌱</div>
+      <div id="plantIcon" class="icon">🌱</div>
+    </div>
+
+    <div class="level-row">
+      <div class="level-badge" id="levelBadge">Level 0 · Samen</div>
+      <div class="muted" id="waterCount">0 Wasser</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="label-row">
+        <span>Fortschritt</span>
+        <span id="progressText">0%</span>
+      </div>
+      <div class="bar"><i id="progressBar"></i></div>
+    </div>
+
+    <div class="status-box">
+      <div><span class="accent">Letzter Gießer:</span> <span id="lastUser">—</span></div>
+      <div><span class="accent">Aktivität:</span> <span id="lastAction">Warte auf Gießen</span></div>
+      <div><span class="accent">Letzte Aufgabe:</span> <span id="lastTask">Noch keine Aufgabe</span></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadState() {
+      try {
+        const response = await fetch('./overlay_state.json?ts=' + Date.now());
+        if (!response.ok) throw new Error('No state');
+        const data = await response.json();
+        update(data);
+      } catch (e) {
+        document.getElementById('lastAction').textContent = 'Warte auf Daten';
+      }
+    }
+
+    function update(data) {
+      const icon = data.icon || '🌱';
+      document.getElementById('plantIcon').textContent = icon;
+      document.getElementById('levelBadge').textContent = `Level ${data.level} · ${data.levelName}`;
+      document.getElementById('waterCount').textContent = `${data.totalWater} Wasser`;
+      document.getElementById('progressText').textContent = `${data.progress}%`;
+      document.getElementById('progressBar').style.width = `${data.progress}%`;
+      document.getElementById('lastUser').textContent = data.lastUser || '—';
+      document.getElementById('lastAction').textContent = describeAction(data.lastAction, data.lastAmount);
+      document.getElementById('lastTask').textContent = data.lastTask || 'Noch keine Aufgabe';
+    }
+
+    function describeAction(action, amount) {
+      if (action === 'levelup') return `Level-Up! +${amount} Wasser`;
+      if (action === 'watering') return `Gießt ${amount} Wasser`;
+      if (action === 'reset') return 'Pflanze zurückgesetzt';
+      return 'Warte auf Gießen';
+    }
+
+    setInterval(loadState, 1000);
+    loadState();
+  </script>
+</body>
+</html>

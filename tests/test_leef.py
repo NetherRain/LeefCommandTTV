@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import tempfile
@@ -59,6 +60,28 @@ class LeefCompatibilityTests(unittest.TestCase):
 
         self.assertEqual(1, len(parent.messages))
         self.assertIn("alice", parent.messages[0])
+
+    def test_completing_final_level_assigns_task_and_resets_to_level_zero(self):
+        final_task = "Finale Aufgabe"
+        leef.settings.TaskList = [final_task]
+        final_level_threshold = sum(
+            leef.GetWaterNeededForLevel(level)
+            for level in range(len(leef.settings.LevelNames) - 1)
+        )
+
+        response = leef.WaterPlant("alice", final_level_threshold)
+
+        self.assertIn(final_task, response)
+        self.assertIn("Level 0 'Samen'", response)
+        self.assertEqual(0, leef.plantData["total_water"])
+        self.assertEqual(0, leef.plantData["level"])
+        self.assertEqual(final_task, leef.plantData["last_task"])
+        self.assertEqual("reset", leef.plantData["last_action"])
+
+        with open(os.path.join(self.temp_dir, leef.OverlayStateFile), encoding="utf-8") as state_file:
+            overlay_state = json.load(state_file)
+        self.assertEqual(0, overlay_state["level"])
+        self.assertEqual(final_task, overlay_state["lastTask"])
 
 
 if __name__ == "__main__":

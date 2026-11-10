@@ -1,0 +1,16 @@
+{
+    "level": 0,
+    "levelName": "Samen",
+    "icon": "🌱",
+    "totalWater": 0,
+    "waterThisLevel": 0,
+    "needed": 100,
+    "progress": 0,
+    "nextLevelWater": 100,
+    "lastTask": "",
+    "lastUser": "Tester",
+    "lastAction": "reset",
+    "lastAmount": 0,
+    "maxLevel": 6,
+    "isComplete": false
+}
